@@ -1,10 +1,14 @@
 package com.example.android.pepperpals;
 
-import android.support.v7.app.AppCompatActivity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ImageView;
 
+import com.aldebaran.qi.Consumer;
 import com.aldebaran.qi.Function;
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
@@ -26,6 +30,8 @@ public class RoutineActivity extends AppCompatActivity implements RobotLifecycle
     private static final String TAG = RoutineActivity.class.getSimpleName();
 
     private static final int CLASSROOM_ROUTINE = 0;
+
+    private static final int RETURN_DELAY_MS = 10000;
 
     Routine routines[];
 
@@ -68,7 +74,32 @@ public class RoutineActivity extends AppCompatActivity implements RobotLifecycle
     public void onRobotFocusGained(QiContext qiContext) {
         Log.d(TAG, "Gained robot focus");
         ApplicationState globalState = (ApplicationState) getApplication();
-        routines[globalState.getCurrentRoutine()].run(qiContext);
+        Future<Void> future = routines[globalState.getCurrentRoutine()].run(qiContext);
+
+        final Context context = this;
+        future.thenConsume(new Consumer<Future<Void>>() {
+            @Override
+            public void consume(Future<Void> future) throws Throwable {
+                if (future.isSuccess()) {
+                    Log.i(TAG, "Routine finished with success.");
+
+                } else if (future.hasError()) {
+                    Log.i(TAG, "Routine finished with error.");
+                }
+
+                // return to Routine after a delay
+                Log.d(TAG, "Waiting for " + RETURN_DELAY_MS + " before transitioning to human action");
+                final Intent intent = new Intent(context, HumanInteractionActivity.class);
+                startActivity(intent);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "Launching HumanInteractionActivity");
+                        startActivity(intent);
+                    }
+                }, RETURN_DELAY_MS);
+            }
+        });
     }
 
     @Override
@@ -80,7 +111,7 @@ public class RoutineActivity extends AppCompatActivity implements RobotLifecycle
     public void onRobotFocusRefused(String reason) {
         Log.d(TAG, "Robot focus refused");
     }
-    
+
     public static Say buildSay(QiContext qiContext, String text) {
         return SayBuilder.with(qiContext)
                 .withText(text)
@@ -90,7 +121,7 @@ public class RoutineActivity extends AppCompatActivity implements RobotLifecycle
     public interface Routine {
         int getImageResourceId();
 
-        void run(final QiContext qiContext);
+        Future<Void> run(final QiContext qiContext);
     }
 
     private static class ClassroomRoutine implements Routine {
@@ -103,11 +134,11 @@ public class RoutineActivity extends AppCompatActivity implements RobotLifecycle
         }
 
         @Override
-        public void run(final QiContext qiContext) {
+        public Future<Void> run(final QiContext qiContext) {
             Future<Void> sayFuture = RoutineActivity.buildSay(qiContext, CLASSROOM_SPEECH).async().run();
 
             // Chain a function to the future.
-            sayFuture.andThenCompose(new Function<Void, Future<Void>>() {
+            return sayFuture.andThenCompose(new Function<Void, Future<Void>>() {
                 @Override
                 public Future<Void> execute(Void ignore) throws Throwable {
                     return move(qiContext);
@@ -146,8 +177,8 @@ public class RoutineActivity extends AppCompatActivity implements RobotLifecycle
         }
 
         @Override
-        public void run(QiContext qiContext) {
-            RoutineActivity.buildSay(qiContext, MATHS_SPEECH).async().run();
+        public Future<Void> run(QiContext qiContext) {
+            return RoutineActivity.buildSay(qiContext, MATHS_SPEECH).async().run();
         }
     }
 }

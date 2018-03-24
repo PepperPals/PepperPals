@@ -1,6 +1,9 @@
 package com.example.android.pepperpals;
 
+import android.content.Context;
+import android.content.Intent;
 import android.media.MediaPlayer;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,6 +24,8 @@ import java.util.Random;
 public class ChallengeActivity extends AppCompatActivity implements RobotLifecycleCallbacks {
 
     private static final String TAG = ChallengeActivity.class.getSimpleName();
+
+    private static final int RETURN_DELAY_MS = 5000;
 
     ImageView challengeView;
 
@@ -117,6 +122,7 @@ public class ChallengeActivity extends AppCompatActivity implements RobotLifecyc
 
         Future<Void> animateFuture = animate.async().run();
 
+        final Context context = this;
         animateFuture.thenConsume(new Consumer<Future<Void>>() {
             @Override
             public void consume(Future<Void> future) throws Throwable {
@@ -126,6 +132,18 @@ public class ChallengeActivity extends AppCompatActivity implements RobotLifecyc
                 } else if (future.hasError()) {
                     Log.i(TAG, "Animation finished with error.");
                 }
+
+                // return to Routine after a delay
+                Log.d(TAG, "Waiting for " + RETURN_DELAY_MS + " before returning to Routine");
+                final Intent intent = new Intent(context, RoutineActivity.class);
+                startActivity(intent);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "Launching RoutineActivity");
+                        startActivity(intent);
+                    }
+                }, RETURN_DELAY_MS);
             }
         });
     }

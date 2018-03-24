@@ -6,16 +6,25 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.aldebaran.qi.Consumer;
+import com.aldebaran.qi.Function;
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
 import com.aldebaran.qi.sdk.builder.AnimateBuilder;
 import com.aldebaran.qi.sdk.builder.AnimationBuilder;
+import com.aldebaran.qi.sdk.builder.GoToBuilder;
 import com.aldebaran.qi.sdk.builder.SayBuilder;
+import com.aldebaran.qi.sdk.object.actuation.Actuation;
 import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
+import com.aldebaran.qi.sdk.object.actuation.Frame;
+import com.aldebaran.qi.sdk.object.actuation.FreeFrame;
+import com.aldebaran.qi.sdk.object.actuation.GoTo;
+import com.aldebaran.qi.sdk.object.actuation.Mapping;
 import com.aldebaran.qi.sdk.object.conversation.Say;
+import com.aldebaran.qi.sdk.object.geometry.Transform;
+import com.aldebaran.qi.sdk.object.geometry.TransformTime;
 import com.aldebaran.qi.sdk.object.human.AttentionState;
 import com.aldebaran.qi.sdk.object.human.ExcitementState;
 import com.aldebaran.qi.sdk.object.human.Gender;
@@ -121,23 +130,76 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
         }
     }
 
-    private void greetHuman(Human human) {
+    private void greetHuman(final Human human) {
         Log.i(TAG, "Greeting human");
 
-        AttentionState attentionState = human.getAttention();
+        final AttentionState attentionState = human.getAttention();
         Log.d(TAG, "Human attention state: " + attentionState);
 
-        Intent nextActivity;
-        //nextActivity = new Intent(this, RoutineActivity.class);
-        if (AttentionState.LOOKING_AT_ROBOT.equals(attentionState)) {
-            Log.d(TAG, "Switch to routine");
-            nextActivity = new Intent(this, HumanInteractionActivity.class);
-        } else {
-            Log.d(TAG, "Switch to challenge to attract attention");
-            nextActivity = new Intent(this, ChallengeActivity.class);
-        }
+        // Create an animation.
+        Animation animation = AnimationBuilder.with(qiContext)
+                //.withResources(R.raw.raise_right_hand_b002)
+                .withResources(R.raw.raise_right_hand_b003)
+                .build();
 
-        startActivity(nextActivity);
+        // Create an animate action.
+        Animate animate = AnimateBuilder.with(qiContext)
+                .withAnimation(animation)
+                .build();
+
+        Say greeting = SayBuilder.with(qiContext)
+                .withText("Hello Codor")
+                .build();
+
+        Log.d(TAG, "do greeting");
+        Future<Void> animateFuture = animate.async().run();
+        Future<Void> greetingFuture = greeting.async().run();
+
+        greetingFuture.thenConsume(new Consumer<Future<Void>>() {
+            @Override
+            public void consume(Future<Void> future) throws Throwable {
+                Future<Void> walkFuture = walkToHuman(human.getHeadFrame());
+                walkFuture.thenConsume(new Consumer<Future<Void>>() {
+                    @Override
+                    public void consume(Future<Void> future) throws Throwable {
+                        Intent nextActivity;
+                        //nextActivity = new Intent(this, RoutineActivity.class);
+                        if (AttentionState.LOOKING_AT_ROBOT.equals(attentionState)) {
+                            Log.d(TAG, "Switch to routine");
+                            nextActivity = new Intent(MainActivity.this, HumanInteractionActivity.class);
+                        } else {
+                            Log.d(TAG, "Switch to challenge to attract attention");
+                            nextActivity = new Intent(MainActivity.this, ChallengeActivity.class);
+                        }
+
+                        startActivity(nextActivity);
+                    }
+                });
+            }
+        });
+    }
+
+    private Future<Void> walkToHuman(Frame humanFrame) {
+        // get robot frame
+        Actuation actuation = qiContext.getActuation();
+        Frame robotFrame = actuation.robotFrame();
+
+        // Get the TransformTime between the human frame and the robot frame.
+        TransformTime transformTime = humanFrame.computeTransform(robotFrame);
+        // Get the transform.
+        Transform transform = transformTime.getTransform();
+
+
+        // create destination
+        Mapping mapping = qiContext.getMapping();
+        FreeFrame destination = mapping.makeFreeFrame();
+        destination.update(robotFrame, transform, System.currentTimeMillis());
+
+        GoTo goTo = GoToBuilder.with(qiContext)
+                .withFrame(destination.frame())
+                .build();
+
+        return goTo.async().run();
     }
 
     private void retrieveCharacteristics(final List<Human> humans) {

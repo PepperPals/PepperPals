@@ -1,5 +1,6 @@
 package com.example.android.pepperpals;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -35,11 +36,6 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
     // The QiContext provided by the QiSDK.
     private QiContext qiContext;
 
-    // Store the Animate action.
-    private Animate animate;
-
-    private Say greeting;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,20 +70,6 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
         this.qiContext = qiContext;
 
         startObserving(qiContext);
-
-       // Create an animation.
-        Animation animation = AnimationBuilder.with(qiContext) // Create the builder with the context.
-                .withResources(R.raw.raise_right_hand_b002) // Set the animation resource.
-                .build(); // Build the animation.
-
-        // Create an animate action.
-        animate = AnimateBuilder.with(qiContext) // Create the builder with the context.
-                .withAnimation(animation) // Set the animation.
-                .build(); // Build the animate action.
-
-        greeting = SayBuilder.with(qiContext) // Create the builder with the context.
-                .withText("Hello human!") // Set the text to say.
-                .build(); // Build the say action.
     }
 
     @Override
@@ -143,8 +125,9 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
 
     private void greetHuman() {
         Log.i(TAG, "Greeting human");
-        Future<Void> animateFuture = animate.async().run();
-        Future<Void> greetingFuture = greeting.async().run();
+
+        Intent intent = new Intent(this, HumanInteractionActivity.class);
+        startActivity(intent);
     }
 
     private void findHumansAround() {

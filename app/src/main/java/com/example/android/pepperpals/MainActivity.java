@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
                 retrieveCharacteristics(humansAround);
 
                 if (humansAround.size() > 0) {
-                    greetHuman();
+                    greetHuman(humansAround.get(0));
                 }
             }
         });
@@ -123,10 +123,11 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
         }
     }
 
-    private void greetHuman() {
+    private void greetHuman(Human human) {
         Log.i(TAG, "Greeting human");
 
-        Intent intent = new Intent(this, HumanInteractionActivity.class);
+        //Intent intent = new Intent(this, HumanInteractionActivity.class);
+        Intent intent = new Intent(this, ChallengeActivity.class);
         startActivity(intent);
     }
 

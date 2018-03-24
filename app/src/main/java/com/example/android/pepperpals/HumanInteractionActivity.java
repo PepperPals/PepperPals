@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
+import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
 import com.aldebaran.qi.sdk.builder.AnimateBuilder;
 import com.aldebaran.qi.sdk.builder.AnimationBuilder;
@@ -32,6 +33,9 @@ public class HumanInteractionActivity extends AppCompatActivity  implements Robo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_human_interaction);
 
+        // Register the RobotLifecycleCallbacks to this Activity.
+        QiSDK.register(this, this);
+
         GridView gridview = (GridView) findViewById(R.id.gridview);
         gridview.setAdapter(new ImageAdapter(this));
 
@@ -42,6 +46,13 @@ public class HumanInteractionActivity extends AppCompatActivity  implements Robo
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        // Unregister all the RobotLifecycleCallbacks for this Activity.
+        QiSDK.unregister(this);
+        super.onDestroy();
     }
 
     @Override

@@ -3,8 +3,6 @@ package com.example.android.pepperpals;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 
 import com.aldebaran.qi.Consumer;
 import com.aldebaran.qi.Future;
@@ -13,8 +11,10 @@ import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
 import com.aldebaran.qi.sdk.builder.AnimateBuilder;
 import com.aldebaran.qi.sdk.builder.AnimationBuilder;
+import com.aldebaran.qi.sdk.builder.SayBuilder;
 import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
+import com.aldebaran.qi.sdk.object.conversation.Say;
 import com.aldebaran.qi.sdk.object.human.AttentionState;
 import com.aldebaran.qi.sdk.object.human.ExcitementState;
 import com.aldebaran.qi.sdk.object.human.Gender;
@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
 
     // Store the Animate action.
     private Animate animate;
+
+    private Say greeting;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +85,9 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
                 .withAnimation(animation) // Set the animation.
                 .build(); // Build the animate action.
 
-
+        greeting = SayBuilder.with(qiContext) // Create the builder with the context.
+                .withText("Hello human!") // Set the text to say.
+                .build(); // Build the say action.
     }
 
     @Override
@@ -120,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
                 retrieveCharacteristics(humansAround);
 
                 if (humansAround.size() > 0) {
-                    wave();
+                    greetHuman();
                 }
             }
         });
@@ -137,9 +141,10 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
         }
     }
 
-    private void wave() {
-        Log.i(TAG, "Waving");
+    private void greetHuman() {
+        Log.i(TAG, "Greeting human");
         Future<Void> animateFuture = animate.async().run();
+        Future<Void> greetingFuture = greeting.async().run();
     }
 
     private void findHumansAround() {

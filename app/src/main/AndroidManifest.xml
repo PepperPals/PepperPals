@@ -18,7 +18,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".HumanInteractionActivity"></activity>
+        <activity android:name=".HumanInteractionActivity" />
+        <activity android:name=".ChallengeActivity" />
+        <activity android:name=".RoutineActivity"></activity>
     </application>
 
 </manifest>

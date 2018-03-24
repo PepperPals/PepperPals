@@ -40,19 +40,16 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ApplicationState globalState = (ApplicationState) getApplication();
+        if (!globalState.isInitialised()) {
+            Log.i(TAG, "Initialising application state");
+            globalState.setCurrentRoutine(0);
+            globalState.setInitialised(true);
+        }
+
         // Register the RobotLifecycleCallbacks to this Activity.
         QiSDK.register(this, this);
-
-/*        // Find humans around when refresh button clicked.
-        Button refreshButton = (Button) findViewById(R.id.refresh_button);
-        refreshButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (qiContext != null) {
-                    findHumansAround();
-                }
-            }
-        });*/
     }
 
     @Override
@@ -89,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
 
     /**
      * Start the observation.
+     *
      * @param qiContext the qiContext
      */
     public void startObserving(QiContext qiContext) {
@@ -127,9 +125,10 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
         Log.i(TAG, "Greeting human");
 
         AttentionState attentionState = human.getAttention();
-        Log.d(TAG, "Human attention state: "+attentionState);
+        Log.d(TAG, "Human attention state: " + attentionState);
 
         Intent nextActivity;
+        //nextActivity = new Intent(this, RoutineActivity.class);
         if (AttentionState.LOOKING_AT_ROBOT.equals(attentionState)) {
             Log.d(TAG, "Switch to routine");
             nextActivity = new Intent(this, HumanInteractionActivity.class);

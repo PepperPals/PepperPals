@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.aldebaran.qi.Future;
@@ -28,6 +29,12 @@ public class HumanInteractionActivity extends AppCompatActivity  implements Robo
 
     private Say greeting;
 
+    private ImageButton questionButton;
+
+    private ImageButton bathroomButton;
+
+    private ImageButton drinkButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,13 +43,29 @@ public class HumanInteractionActivity extends AppCompatActivity  implements Robo
         // Register the RobotLifecycleCallbacks to this Activity.
         QiSDK.register(this, this);
 
-        GridView gridview = (GridView) findViewById(R.id.gridview);
-        gridview.setAdapter(new ImageAdapter(this));
+        questionButton = (ImageButton) findViewById(R.id.request_question);
+        questionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(HumanInteractionActivity.this, "Question",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
 
-        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v,
-                                    int position, long id) {
-                Toast.makeText(HumanInteractionActivity.this, "" + position,
+        bathroomButton = (ImageButton) findViewById(R.id.request_bathroom);
+        bathroomButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(HumanInteractionActivity.this, "Bathroom",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        drinkButton = (ImageButton) findViewById(R.id.request_drink);
+        drinkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(HumanInteractionActivity.this, "Drink",
                         Toast.LENGTH_SHORT).show();
             }
         });

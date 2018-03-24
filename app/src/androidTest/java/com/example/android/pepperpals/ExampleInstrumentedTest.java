@@ -1,4 +1,4 @@
-package com.example.android.firstpepper;
+package com.example.android.pepperpals;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

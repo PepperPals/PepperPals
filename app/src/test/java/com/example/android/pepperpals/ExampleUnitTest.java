@@ -1,4 +1,4 @@
-package com.example.android.firstpepper;
+package com.example.android.pepperpals;
 
 import org.junit.Test;
 

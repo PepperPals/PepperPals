@@ -126,22 +126,19 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
     private void greetHuman(Human human) {
         Log.i(TAG, "Greeting human");
 
-        //Intent intent = new Intent(this, HumanInteractionActivity.class);
-        Intent intent = new Intent(this, ChallengeActivity.class);
-        startActivity(intent);
-    }
+        AttentionState attentionState = human.getAttention();
+        Log.d(TAG, "Human attention state: "+attentionState);
 
-    private void findHumansAround() {
-        // Get the humans around the robot.
-        Future<List<Human>> humansAroundFuture = humanAwareness.async().getHumansAround();
+        Intent nextActivity;
+        if (AttentionState.LOOKING_AT_ROBOT.equals(attentionState)) {
+            Log.d(TAG, "Switch to routine");
+            nextActivity = new Intent(this, HumanInteractionActivity.class);
+        } else {
+            Log.d(TAG, "Switch to challenge to attract attention");
+            nextActivity = new Intent(this, ChallengeActivity.class);
+        }
 
-        humansAroundFuture.andThenConsume(new Consumer<List<Human>>() {
-            @Override
-            public void consume(List<Human> humansAround) throws Throwable {
-                Log.i(TAG, humansAround.size() + " human(s) around.");
-                retrieveCharacteristics(humansAround);
-            }
-        });
+        startActivity(nextActivity);
     }
 
     private void retrieveCharacteristics(final List<Human> humans) {

@@ -1,10 +1,13 @@
 package com.example.android.pepperpals;
 
+import android.media.MediaPlayer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 
+import com.aldebaran.qi.Consumer;
+import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
@@ -35,6 +38,10 @@ public class ChallengeActivity extends AppCompatActivity implements RobotLifecyc
 
     private int[] logos;
 
+    private int soundsIds[];
+
+    private MediaPlayer mediaPlayer;
+
     private int selectedChallenge;
 
     @Override
@@ -54,10 +61,18 @@ public class ChallengeActivity extends AppCompatActivity implements RobotLifecyc
                 R.drawable.challenge_gorilla,
                 R.drawable.challenge_mouse};
 
+        soundsIds = new int[]{
+                R.raw.dog_sound,
+                R.raw.elephant_sound,
+                R.raw.cat_sound,
+                R.raw.gorilla_sound,
+                R.raw.mouse_sound
+        };
+
         // pick a random image and associated animation
         Random random = new Random();
         selectedChallenge = random.nextInt(logos.length);
-        Log.d(TAG, "Selected challenge: "+selectedChallenge);
+        Log.d(TAG, "Selected challenge: " + selectedChallenge);
         challengeView.setImageResource(logos[selectedChallenge]);
     }
 
@@ -66,6 +81,14 @@ public class ChallengeActivity extends AppCompatActivity implements RobotLifecyc
         // Unregister all the RobotLifecycleCallbacks for this Activity.
         QiSDK.unregister(this);
         super.onDestroy();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        int id = soundsIds[selectedChallenge];
+        Log.d(TAG, "onStart - load MediaPlayer, for sound " + selectedChallenge + ", with ID " + id);
+        mediaPlayer = MediaPlayer.create(this, id);
     }
 
     @Override
@@ -80,8 +103,31 @@ public class ChallengeActivity extends AppCompatActivity implements RobotLifecyc
 
         animations = new Animate[]{animateDog, animateElephant, animateFeline, animateGorilla, animateMouse};
 
-        Log.d(TAG, "Start challenge animation: "+selectedChallenge);
-        animations[selectedChallenge].async().run();
+        Log.d(TAG, "Start challenge animation: " + selectedChallenge);
+        Animate animate = animations[selectedChallenge];
+
+        // Set an on started listener to the animate action.
+        animate.setOnStartedListener(new Animate.OnStartedListener() {
+            @Override
+            public void onStarted() {
+                Log.i(TAG, "Animated started. Will play audio");
+                mediaPlayer.start();
+            }
+        });
+
+        Future<Void> animateFuture = animate.async().run();
+
+        animateFuture.thenConsume(new Consumer<Future<Void>>() {
+            @Override
+            public void consume(Future<Void> future) throws Throwable {
+                if (future.isSuccess()) {
+                    Log.i(TAG, "Animation finished with success.");
+
+                } else if (future.hasError()) {
+                    Log.i(TAG, "Animation finished with error.");
+                }
+            }
+        });
     }
 
     private Animate loadAnimation(QiContext qiContext, int id) {

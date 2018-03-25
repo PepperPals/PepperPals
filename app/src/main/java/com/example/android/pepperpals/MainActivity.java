@@ -1,12 +1,11 @@
 package com.example.android.pepperpals;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.aldebaran.qi.Consumer;
-import com.aldebaran.qi.Function;
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
@@ -103,20 +102,28 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
         humanAwareness = qiContext.getHumanAwareness();
 
         List<Human> humansAround = humanAwareness.getHumansAround();
+        Log.i(TAG, "At start I see " + humansAround.size() + " humamsn");
         retrieveCharacteristics(humansAround);
 
-        // Update the observed human when the humans around change.
-        humanAwareness.setOnHumansAroundChangedListener(new HumanAwareness.OnHumansAroundChangedListener() {
-            @Override
-            public void onHumansAroundChanged(List<Human> humansAround) {
-                Log.i(TAG, humansAround.size() + " human(s) around.");
-                retrieveCharacteristics(humansAround);
+        // if we see a human immediately, go to them immediately
+        if (humansAround.size() > 0) {
+            Log.i(TAG, "Going immediately to human");
+            greetHuman(humansAround.get(0));
+        } else {
+            Log.i(TAG, "Adding callback and waiting for humans to arrive");
+            // Update the observed human when the humans around change.
+            humanAwareness.setOnHumansAroundChangedListener(new HumanAwareness.OnHumansAroundChangedListener() {
+                @Override
+                public void onHumansAroundChanged(List<Human> humansAround) {
+                    Log.i(TAG, humansAround.size() + " human(s) around.");
+                    retrieveCharacteristics(humansAround);
 
-                if (humansAround.size() > 0) {
-                    greetHuman(humansAround.get(0));
+                    if (humansAround.size() > 0) {
+                        greetHuman(humansAround.get(0));
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -163,10 +170,9 @@ public class MainActivity extends AppCompatActivity implements RobotLifecycleCal
                     @Override
                     public void consume(Future<Void> future) throws Throwable {
                         Intent nextActivity;
-                        //nextActivity = new Intent(this, RoutineActivity.class);
                         if (AttentionState.LOOKING_AT_ROBOT.equals(attentionState)) {
                             Log.d(TAG, "Switch to routine");
-                            nextActivity = new Intent(MainActivity.this, HumanInteractionActivity.class);
+                            nextActivity = new Intent(MainActivity.this, RoutineActivity.class);
                         } else {
                             Log.d(TAG, "Switch to challenge to attract attention");
                             nextActivity = new Intent(MainActivity.this, ChallengeActivity.class);
